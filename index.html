@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Appointment App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+     
+    <form id="registrationForm">
+        <h2>Booking Appointment App</h2>
+        <label for="username">Name:</label>
+        <input type="text" id="username" name="username" required><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+
+        <label for="phone">Phone:</label>
+        <input type="tel" id="phone" name="phone"><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <ul id="userList"></ul>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const userList = document.getElementById('userList');
+
+        // Function to fetch and display users
+        async function displayUsers() {
+            try {
+                const response = await fetch('http://localhost:4400/users');
+                const users = await response.json();
+
+                userList.innerHTML = '';
+                users.forEach(user => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        Name: ${user.name}, Email: ${user.email}, Phone: ${user.phone}
+                        <button onclick="deleteUser('${user.id}')">Delete</button>
+                    `;
+                    userList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        }
+
+        // Display users on page load
+        displayUsers();
+
+        // Form submission handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                name: form.username.value,  // Corrected reference to 'username' field
+                email: form.email.value,
+                phone: form.phone.value,
+            };
+
+            try {
+                const response = await fetch('http://localhost:4400/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    form.reset();  // Reset form after successful submission
+                    displayUsers();  // Refresh user list
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Delete user function
+        async function deleteUser(userId) {
+            try {
+                const response = await fetch(`http://localhost:4400/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    displayUsers();  // Refresh user list after deletion
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
